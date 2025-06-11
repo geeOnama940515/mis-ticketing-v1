@@ -13,7 +13,10 @@ COPY . .
 # ❗ If your build uses environment variables like process.env.XYZ, add this:
 # COPY .env .env
 
-# 🚨 This is the failing line. It’s likely your build has issues.
+# 🔧 Clean any existing build cache to prevent webpack cache corruption
+RUN rm -rf .next
+
+# 🚨 This is the failing line. It's likely your build has issues.
 RUN npm run build
 
 
