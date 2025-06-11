@@ -1,7 +1,8 @@
 "use client";
 
 import { Ticket, User } from '@/types';
-import { getTickets, getUsers } from '@/lib/auth';
+import { getTickets } from '@/lib/tickets';
+import { getUsers } from '@/lib/auth';
 import { startOfWeek, startOfMonth, endOfWeek, endOfMonth, subDays, subWeeks, subMonths, isWithinInterval, differenceInHours, differenceInDays } from 'date-fns';
 
 export interface KPIMetrics {
