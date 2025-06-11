@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Ticket, Eye, EyeOff } from 'lucide-react';
@@ -18,7 +17,6 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'employee' as 'employee' | 'tech_support' | 'developer' | 'it_admin',
     department: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -49,7 +47,7 @@ export default function RegisterPage() {
       const success = await register({
         name: formData.name,
         email: formData.email,
-        role: formData.role,
+        role: 'employee', // Default role for all new registrations
         department: formData.department,
         password: formData.password,
       });
@@ -84,7 +82,7 @@ export default function RegisterPage() {
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">Create Account</CardTitle>
           <CardDescription className="text-gray-600">
-            Join the IT support system to manage tickets
+            Join the IT support system to submit and track tickets
           </CardDescription>
         </CardHeader>
 
@@ -120,21 +118,6 @@ export default function RegisterPage() {
                 required
                 className="h-11"
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={formData.role} onValueChange={(value: any) => handleInputChange('role', value)}>
-                <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="employee">Employee</SelectItem>
-                  <SelectItem value="tech_support">Tech Support</SelectItem>
-                  <SelectItem value="developer">Developer</SelectItem>
-                  <SelectItem value="it_admin">IT Admin</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="space-y-2">
@@ -191,6 +174,13 @@ export default function RegisterPage() {
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> New accounts are created with Employee access. 
+                Contact your IT administrator to request elevated permissions if needed.
+              </p>
             </div>
           </CardContent>
 
