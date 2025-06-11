@@ -2,10 +2,13 @@ version: '3.8'
 
 services:
   mis-ticketing-v1:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: mis-ticketing-v1
     ports:
       - "9009:9009"
     environment:
-      - NODE_ENV=production
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: 1
     restart: unless-stopped
