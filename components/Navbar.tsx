@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LogOut, Settings, User, Ticket, Users, BarChart3 } from 'lucide-react';
+import { LogOut, Settings, User, Ticket, Users, BarChart3, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -64,12 +64,20 @@ export const Navbar = () => {
                 </Button>
               </Link>
               {(user?.role === 'it_admin') && (
-                <Link href="/users">
-                  <Button variant="ghost" className="flex items-center space-x-2">
-                    <Users className="h-4 w-4" />
-                    <span>Users</span>
-                  </Button>
-                </Link>
+                <>
+                  <Link href="/users">
+                    <Button variant="ghost" className="flex items-center space-x-2">
+                      <Users className="h-4 w-4" />
+                      <span>Users</span>
+                    </Button>
+                  </Link>
+                  <Link href="/analytics">
+                    <Button variant="ghost" className="flex items-center space-x-2">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>Analytics</span>
+                    </Button>
+                  </Link>
+                </>
               )}
             </div>
           </div>
