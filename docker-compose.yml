@@ -1,10 +1,16 @@
 version: '3.8'
 
 services:
-  it-ticketing:
+  mis-ticketing-v1:
     build: .
     ports:
-      - "9009:3000"
+      - "9009:9009"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
+    networks:
+      - barn-network
+
+networks:
+  ticketingv1-network:
+    driver: bridge
