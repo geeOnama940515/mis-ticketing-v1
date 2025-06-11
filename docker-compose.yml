@@ -2,26 +2,10 @@ version: '3.8'
 
 services:
   mis-ticketing-v1:
-    build: 
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: mis-ticketing-v1
     ports:
       - "9009:9009"
     environment:
       - NODE_ENV=production
-      - PORT=9009
-      - HOSTNAME=0.0.0.0
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9009"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    networks:
-      - ticketing-network
-
-networks:
-  ticketing-network:
-    driver: bridge
