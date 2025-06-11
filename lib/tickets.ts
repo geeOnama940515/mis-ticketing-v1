@@ -52,6 +52,33 @@ export const updateTicket = (ticketId: string, updates: Partial<Ticket>): Ticket
   return updatedTicket;
 };
 
+export const resolveTicket = (
+  ticketId: string, 
+  resolutionSteps: string, 
+  resolvedBy: string, 
+  resolvedByName: string
+): Ticket | null => {
+  const tickets = getTickets();
+  const ticketIndex = tickets.findIndex(t => t.id === ticketId);
+  
+  if (ticketIndex === -1) return null;
+  
+  const updatedTicket = {
+    ...tickets[ticketIndex],
+    status: 'resolved' as const,
+    resolutionSteps,
+    resolvedBy,
+    resolvedByName,
+    resolvedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  
+  tickets[ticketIndex] = updatedTicket;
+  localStorage.setItem(TICKETS_STORAGE_KEY, JSON.stringify(tickets));
+  
+  return updatedTicket;
+};
+
 export const addComment = (ticketId: string, comment: Omit<TicketComment, 'id' | 'createdAt'>): boolean => {
   const tickets = getTickets();
   const ticketIndex = tickets.findIndex(t => t.id === ticketId);

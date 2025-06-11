@@ -23,6 +23,10 @@ export interface Ticket {
   updatedAt: string;
   screenshots: string[];
   comments: TicketComment[];
+  resolutionSteps?: string;
+  resolvedBy?: string;
+  resolvedByName?: string;
+  resolvedAt?: string;
 }
 
 export interface TicketComment {

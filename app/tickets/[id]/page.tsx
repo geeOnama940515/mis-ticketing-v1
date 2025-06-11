@@ -3,6 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Navbar } from '@/components/Navbar';
+import { ResolutionStepsDialog } from '@/components/ResolutionStepsDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,12 +13,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { getTickets, updateTicket, addComment } from '@/lib/tickets';
+import { getTickets, updateTicket, addComment, resolveTicket } from '@/lib/tickets';
+import { exportTicketToPDF } from '@/lib/pdfExport';
 import { getUsers } from '@/lib/auth';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Ticket, User, TicketComment } from '@/types';
-import { ArrowLeft, Send, Clock, User as UserIcon, AlertCircle, CheckCircle, XCircle, Pause, MessageSquare, Image, Download } from 'lucide-react';
+import { ArrowLeft, Send, Clock, User as UserIcon, AlertCircle, CheckCircle, XCircle, Pause, MessageSquare, Image, Download, FileText, CheckSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 
@@ -31,6 +33,8 @@ export default function TicketDetailPage() {
   const [updating, setUpdating] = useState(false);
   const [comment, setComment] = useState('');
   const [addingComment, setAddingComment] = useState(false);
+  const [showResolutionDialog, setShowResolutionDialog] = useState(false);
+  const [resolvingTicket, setResolvingTicket] = useState(false);
 
   useEffect(() => {
     const loadData = () => {
@@ -55,7 +59,13 @@ export default function TicketDetailPage() {
   const canUpdateStatus = user?.role === 'it_admin' || user?.role === 'tech_support' || user?.role === 'developer';
 
   const handleStatusUpdate = async (newStatus: string) => {
-    if (!ticket) return;
+    if (!ticket || !user) return;
+    
+    // If trying to resolve, show resolution dialog
+    if (newStatus === 'resolved' && canUpdateStatus) {
+      setShowResolutionDialog(true);
+      return;
+    }
     
     setUpdating(true);
     const updatedTicket = updateTicket(ticket.id, { status: newStatus as any });
@@ -63,6 +73,18 @@ export default function TicketDetailPage() {
       setTicket(updatedTicket);
     }
     setUpdating(false);
+  };
+
+  const handleResolveTicket = async (resolutionSteps: string) => {
+    if (!ticket || !user) return;
+    
+    setResolvingTicket(true);
+    const resolvedTicket = resolveTicket(ticket.id, resolutionSteps, user.id, user.name);
+    if (resolvedTicket) {
+      setTicket(resolvedTicket);
+      setShowResolutionDialog(false);
+    }
+    setResolvingTicket(false);
   };
 
   const handleAssignment = async (assignedTo: string, assignedToName: string) => {
@@ -100,6 +122,12 @@ export default function TicketDetailPage() {
       setComment('');
     }
     setAddingComment(false);
+  };
+
+  const handleExportPDF = () => {
+    if (ticket) {
+      exportTicketToPDF(ticket);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -191,33 +219,45 @@ export default function TicketDetailPage() {
         
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
-          <div className="flex items-center space-x-4 mb-8">
-            <Link href="/tickets">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Tickets
-              </Button>
-            </Link>
-            <div className="flex-1">
-              <div className="flex items-center space-x-3 mb-2">
-                <h1 className="text-3xl font-bold text-gray-900">{ticket.title}</h1>
-                <Badge className={getStatusColor(ticket.status)} variant="secondary">
-                  {getStatusIcon(ticket.status)}
-                  <span className="ml-1 capitalize">{ticket.status.replace('_', ' ')}</span>
-                </Badge>
-              </div>
-              <div className="flex items-center space-x-4">
-                <Badge className={getPriorityColor(ticket.priority)} variant="secondary">
-                  {ticket.priority.toUpperCase()}
-                </Badge>
-                <Badge className={getCategoryColor(ticket.category)} variant="secondary">
-                  {ticket.category.charAt(0).toUpperCase() + ticket.category.slice(1)}
-                </Badge>
-                <span className="text-gray-600 text-sm">
-                  Ticket #{ticket.id.split('-')[1]}
-                </span>
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-4">
+              <Link href="/tickets">
+                <Button variant="outline" size="sm">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to Tickets
+                </Button>
+              </Link>
+              <div className="flex-1">
+                <div className="flex items-center space-x-3 mb-2">
+                  <h1 className="text-3xl font-bold text-gray-900">{ticket.title}</h1>
+                  <Badge className={getStatusColor(ticket.status)} variant="secondary">
+                    {getStatusIcon(ticket.status)}
+                    <span className="ml-1 capitalize">{ticket.status.replace('_', ' ')}</span>
+                  </Badge>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <Badge className={getPriorityColor(ticket.priority)} variant="secondary">
+                    {ticket.priority.toUpperCase()}
+                  </Badge>
+                  <Badge className={getCategoryColor(ticket.category)} variant="secondary">
+                    {ticket.category.charAt(0).toUpperCase() + ticket.category.slice(1)}
+                  </Badge>
+                  <span className="text-gray-600 text-sm">
+                    Ticket #{ticket.id.split('-')[1]}
+                  </span>
+                </div>
               </div>
             </div>
+            
+            {/* Export PDF Button */}
+            <Button 
+              onClick={handleExportPDF}
+              variant="outline"
+              className="flex items-center space-x-2"
+            >
+              <FileText className="h-4 w-4" />
+              <span>Export PDF</span>
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -276,6 +316,28 @@ export default function TicketDetailPage() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Resolution Steps */}
+              {ticket.resolutionSteps && ticket.status === 'resolved' && (
+                <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg border-l-4 border-l-green-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2 text-green-700">
+                      <CheckSquare className="h-5 w-5" />
+                      <span>Resolution Steps</span>
+                    </CardTitle>
+                    {ticket.resolvedByName && ticket.resolvedAt && (
+                      <p className="text-sm text-gray-600">
+                        Resolved by {ticket.resolvedByName} on {formatDistanceToNow(new Date(ticket.resolvedAt), { addSuffix: true })}
+                      </p>
+                    )}
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-green-50 p-4 rounded-lg">
+                      <p className="text-gray-700 whitespace-pre-wrap">{ticket.resolutionSteps}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Comments */}
               <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
@@ -468,6 +530,15 @@ export default function TicketDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Resolution Steps Dialog */}
+        <ResolutionStepsDialog
+          isOpen={showResolutionDialog}
+          onClose={() => setShowResolutionDialog(false)}
+          onResolve={handleResolveTicket}
+          ticketTitle={ticket.title}
+          loading={resolvingTicket}
+        />
       </div>
     </ProtectedRoute>
   );

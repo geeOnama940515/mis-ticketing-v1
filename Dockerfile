@@ -1,23 +1,35 @@
-# Use the official Node.js 18 image as base
-FROM node:18-alpine
+# ✅ Build stage
+FROM node:20-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files
+# ✅ Install dependencies
 COPY package*.json ./
+RUN npm install
 
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
+# ✅ Add application source
 COPY . .
 
-# Build the application
+# ❗ If your build uses environment variables like process.env.XYZ, add this:
+# COPY .env .env
+
+# 🚨 This is the failing line. It’s likely your build has issues.
 RUN npm run build
 
-# Expose port 9009
+
+# ✅ Production image
+FROM node:20-alpine
+
+WORKDIR /app
+
+# ✅ Copy build artifacts and production dependencies
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package*.json ./
+
+# ✅ Port
 EXPOSE 9009
 
-# Start the application
-CMD ["npm", "start"]
+# ✅ Run the production server
+CMD ["npm", "run", "start", "--", "-p", "9009"]
