@@ -6,14 +6,14 @@ WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci --only=production=false
+RUN npm ci --omit=dev
 
 # Copy source code
 COPY . .
 
-# Set environment variables
-ENV NODE_ENV=production
+# Disable telemetry and set environment
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
 # Build the application
 RUN npm run build
